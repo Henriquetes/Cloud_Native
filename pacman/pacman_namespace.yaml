@@ -1,0 +1,71 @@
+# Create namespaceeee:
+# https://kubernetes.io/docs/tasks/administer-cluster/namespaces/
+# https://kubernetes.io/docs/concepts/overview/working-with-objects/namespaces/
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: pacman-namespace
+---
+# Create deployment:
+# https://kubernetes.io/docs/concepts/workloads/controllers/deployment/
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  namespace: pacman-namespace
+  name: pacman-deployment
+  labels:
+    app: pacman
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: pacman
+  template:
+    metadata:
+      labels:
+        app: pacman
+    spec:
+      containers:
+      - name: pacman
+        image: ghcr.io/playground22/pacman:2.0
+        ports:
+        - containerPort: 80
+---
+# Create service type ClusterIP:
+# https://medium.com/the-programmer/working-with-clusterip-service-type-in-kubernetes-45f2c01a89c8
+# https://cloud.google.com/kubernetes-engine/docs/how-to/exposing-apps
+apiVersion: v1
+kind: Service
+metadata:
+  namespace: pacman-namespace
+  name: pacman-clusterip-service
+spec:
+  type: ClusterIP
+  selector:
+    app: pacman
+  ports:
+    - port: 80
+      targetPort: 80
+---
+# Create ingress (ingress controller is managed by minikube):
+# https://kubernetes.io/docs/concepts/services-networking/ingress/
+# https://matthewpalmer.net/kubernetes-app-developer/articles/kubernetes-ingress-guide-nginx-example.html
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  namespace: pacman-namespace
+  name: pacman-ingress
+  annotations:
+    nginx.ingress.kubernetes.io/rewrite-target: /
+spec:
+  rules:
+    - host: pacman.local
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: pacman-clusterip-service
+                port:
+                  number: 80
