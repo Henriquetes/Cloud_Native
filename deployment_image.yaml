@@ -16,7 +16,7 @@ spec:
     spec:
       containers:
       - name: pacman
-        image: ghcr.io/henriqueteixeira355/cloud_native
+        image: henriqueteixeira355/cloud_native
         ports:
         - containerPort: 80
 
